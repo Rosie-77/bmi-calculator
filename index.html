@@ -134,6 +134,9 @@
     }
     input[type="number"]::-webkit-inner-spin-button,
     input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    input[type="number"]::-webkit-input-placeholder { color: #b0a898; }
+    input[type="number"]::-moz-placeholder { color: #b0a898; }
+    input[type="number"]::placeholder { color: #b0a898; }
     input[type="number"]:focus { border-color: var(--ink); }
 
     .unit {
@@ -301,7 +304,7 @@
   <div class="field">
     <label for="height">身高</label>
     <div class="input-wrap">
-      <input type="number" id="height" value="165" min="50" max="250"/>
+      <input type="number" id="height" placeholder="166" min="50" max="250"/>
       <span class="unit">cm</span>
     </div>
   </div>
@@ -309,7 +312,7 @@
   <div class="field">
     <label for="weight">体重</label>
     <div class="input-wrap">
-      <input type="number" id="weight" value="65" min="10" max="300"/>
+      <input type="number" id="weight" placeholder="60" min="10" max="300"/>
       <span class="unit">kg</span>
     </div>
   </div>
@@ -340,17 +343,16 @@
 </div>
 
 <script>
-  // Select all text on focus so user can type directly without deleting
-  document.querySelectorAll('input[type="number"]').forEach(input => {
-    input.addEventListener('focus', () => input.select());
-  });
-
   // Allow Enter key to trigger calculation
   document.addEventListener('keydown', e => { if (e.key === 'Enter') calculate(); });
 
   function calculate() {
-    const h = parseFloat(document.getElementById('height').value);
-    const w = parseFloat(document.getElementById('weight').value);
+    const heightEl = document.getElementById('height');
+    const weightEl = document.getElementById('weight');
+
+    // Use typed value, or fall back to placeholder if empty
+    const h = parseFloat(heightEl.value) || parseFloat(heightEl.placeholder);
+    const w = parseFloat(weightEl.value) || parseFloat(weightEl.placeholder);
     const err = document.getElementById('error');
 
     // Validation

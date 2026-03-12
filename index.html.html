@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BMI 计算器</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&family=Nunito:wght@600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f0e8;
+      --card: #fffdf8;
+      --ink: #1a1710;
+      --muted: #8a8474;
+      --border: #e2ddd3;
+      --thin: #3d8b6e;
+      --normal: #2a7abf;
+      --over: #d4823a;
+      --obese: #c0392b;
+      --accent: #1a1710;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 2rem 3rem;
+      position: relative;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    /* background decoration */
+    body::before {
+      content: 'BMI';
+      position: fixed;
+      top: -0.1em;
+      right: -0.05em;
+      font-family: 'DM Serif Display', serif;
+      font-size: 32vw;
+      color: rgba(26,23,16,0.04);
+      line-height: 1;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 2rem 2.5rem 2.5rem;
+      width: 100%;
+      max-width: 460px;
+      position: relative;
+      box-shadow: 6px 6px 0px var(--ink);
+      margin: 1.5rem auto;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 12px; left: 12px; right: -12px; bottom: -12px;
+      border: 1px solid rgba(26,23,16,0.12);
+      border-radius: 2px;
+      z-index: -1;
+    }
+
+    .header { margin-bottom: 1.5rem; }
+
+    .eyebrow {
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+    }
+
+    h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.2rem;
+      color: var(--ink);
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+
+    h1 em {
+      font-style: italic;
+      color: var(--muted);
+    }
+
+    .divider {
+      width: 40px;
+      height: 2px;
+      background: var(--ink);
+      margin: 0.8rem 0;
+    }
+
+    .field { margin-bottom: 1rem; }
+
+    label {
+      display: block;
+      font-family: 'Nunito', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: var(--ink);
+      margin-bottom: 0.5rem;
+    }
+
+    .input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 0.65rem 3rem 0.65rem 1rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 300;
+      color: var(--ink);
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      outline: none;
+      transition: border-color 0.2s;
+      -moz-appearance: textfield;
+    }
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    input[type="number"]:focus { border-color: var(--ink); }
+
+    .unit {
+      position: absolute;
+      right: 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      pointer-events: none;
+    }
+
+    button {
+      width: 100%;
+      padding: 0.8rem;
+      margin-top: 0.3rem;
+      background: #1e5c3a;
+      color: #f5f0e8;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, background 0.2s;
+      box-shadow: 3px 3px 0 rgba(10,40,22,0.3);
+    }
+
+    button:hover {
+      background: #256b44;
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0 rgba(10,40,22,0.35);
+    }
+
+    button:active {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0 rgba(10,40,22,0.2);
+    }
+
+    /* Result */
+    .result {
+      margin-top: 1.2rem;
+      padding-top: 1.2rem;
+      border-top: 1px solid var(--border);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+      pointer-events: none;
+    }
+
+    .result.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .result-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+
+    .bmi-label {
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .bmi-value {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.8rem;
+      line-height: 1;
+      letter-spacing: -0.03em;
+      transition: color 0.4s;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 0.3rem 0.8rem;
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      border-radius: 2px;
+      transition: background 0.4s, color 0.4s;
+    }
+
+    /* Scale bar */
+    .scale {
+      margin-top: 1rem;
+      position: relative;
+    }
+
+    .scale-track {
+      height: 4px;
+      border-radius: 2px;
+      background: linear-gradient(to right,
+        var(--thin) 0%, var(--thin) 24%,
+        var(--normal) 24%, var(--normal) 50%,
+        var(--over) 50%, var(--over) 72%,
+        var(--obese) 72%, var(--obese) 100%
+      );
+      position: relative;
+    }
+
+    .scale-marker {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--ink);
+      border: 2px solid var(--card);
+      box-shadow: 0 0 0 1px var(--ink);
+      transition: left 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .scale-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.5rem;
+    }
+
+    .scale-labels span {
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+
+    .error-msg {
+      font-size: 0.78rem;
+      color: var(--obese);
+      margin-top: 0.6rem;
+      min-height: 1.2em;
+      letter-spacing: 0.02em;
+    }
+
+    /* color states */
+    .thin   { color: var(--thin); }
+    .normal { color: var(--normal); }
+    .over   { color: var(--over); }
+    .obese  { color: var(--obese); }
+
+    .badge-thin   { background: rgba(61,139,110,0.12); color: var(--thin); }
+    .badge-normal { background: rgba(42,122,191,0.12); color: var(--normal); }
+    .badge-over   { background: rgba(212,130,58,0.12); color: var(--over); }
+    .badge-obese  { background: rgba(192,57,43,0.12);  color: var(--obese); }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="header">
+    <p class="eyebrow">身体质量指数</p>
+    <h1>B<em>M</em>I<br>计算器</h1>
+    <div class="divider"></div>
+  </div>
+
+  <div class="field">
+    <label for="height">身高</label>
+    <div class="input-wrap">
+      <input type="number" id="height" value="165" min="50" max="250"/>
+      <span class="unit">cm</span>
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="weight">体重</label>
+    <div class="input-wrap">
+      <input type="number" id="weight" value="65" min="10" max="300"/>
+      <span class="unit">kg</span>
+    </div>
+  </div>
+
+  <p class="error-msg" id="error"></p>
+
+  <button onclick="calculate()">计 算</button>
+
+  <div class="result" id="result">
+    <div class="result-row">
+      <span class="bmi-label">你的 BMI</span>
+      <span class="status-badge" id="badge">—</span>
+    </div>
+    <div class="bmi-value" id="bmiNum">—</div>
+
+    <div class="scale" id="scale">
+      <div class="scale-track">
+        <div class="scale-marker" id="marker" style="left:0%"></div>
+      </div>
+      <div class="scale-labels">
+        <span>偏瘦</span>
+        <span>正常</span>
+        <span>超重</span>
+        <span>肥胖</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Select all text on focus so user can type directly without deleting
+  document.querySelectorAll('input[type="number"]').forEach(input => {
+    input.addEventListener('focus', () => input.select());
+  });
+
+  // Allow Enter key to trigger calculation
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') calculate(); });
+
+  function calculate() {
+    const h = parseFloat(document.getElementById('height').value);
+    const w = parseFloat(document.getElementById('weight').value);
+    const err = document.getElementById('error');
+
+    // Validation
+    if (!h || !w || isNaN(h) || isNaN(w)) {
+      err.textContent = '请输入有效的身高和体重';
+      return;
+    }
+    if (h < 50 || h > 250) { err.textContent = '请输入合理的身高（50–250 cm）'; return; }
+    if (w < 10 || w > 300) { err.textContent = '请输入合理的体重（10–300 kg）'; return; }
+    err.textContent = '';
+
+    const hm = h / 100;
+    const bmi = w / (hm * hm);
+    const bmiRound = Math.round(bmi * 100) / 100;
+
+    // Status
+    let label, cls, badgeCls;
+    if      (bmi < 18.5) { label = '偏　瘦'; cls = 'thin';   badgeCls = 'badge-thin'; }
+    else if (bmi < 24)   { label = '正　常'; cls = 'normal'; badgeCls = 'badge-normal'; }
+    else if (bmi < 28)   { label = '超　重'; cls = 'over';   badgeCls = 'badge-over'; }
+    else                 { label = '肥　胖'; cls = 'obese';  badgeCls = 'badge-obese'; }
+
+    // Update UI
+    const numEl   = document.getElementById('bmiNum');
+    const badgeEl = document.getElementById('badge');
+    const marker  = document.getElementById('marker');
+    const result  = document.getElementById('result');
+
+    numEl.textContent = bmiRound;
+    numEl.className = 'bmi-value ' + cls;
+
+    badgeEl.textContent = label;
+    badgeEl.className = 'status-badge ' + badgeCls;
+
+    // Marker position: map BMI 10–40 → 0–100%
+    const pct = Math.min(100, Math.max(0, (bmi - 10) / 30 * 100));
+    marker.style.left = pct + '%';
+
+    result.classList.add('visible');
+  }
+</script>
+
+</body>
+</html>
